@@ -20,10 +20,10 @@ import java.nio.*;
 import java.util.*;
 
 public class Frame {
-	public final int MOBILE_PORT = 9000;
-	public final int FOREIGN_PORT = 8000;
-	public final int HOME_PORT = 7000;
-	public final int CORRESPONDENT_PORT = 6000;
+	public static final int MOBILE_PORT = 9000;
+	public static final int FOREIGN_PORT = 8000;
+	public static final int HOME_PORT = 7000;
+	public static final int CORRESPONDENT_PORT = 6000;
 	
 	public static final int MAX_MSG_SIZE = 52;
 	private byte[] data;

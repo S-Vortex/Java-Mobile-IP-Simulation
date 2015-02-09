@@ -13,12 +13,21 @@
 // Program's Operational Status: Awaiting Testing
 ///////////////////////////////////////////////////////////////////
 
+import java.io.*;
 import java.net.*;
+import java.util.*;
 
 public class MobileNode {
 	public static void main(String[] args) {
 		String homeAddr, foreignAddr;
-		DatagramSocket socket = new DatagramSocket(Frame.MOBILE_PORT);
+		DatagramSocket socket = null;
+		try {
+			socket = new DatagramSocket(Frame.MOBILE_PORT);
+			socket.setSoTimeout(1000);
+		} catch (SocketException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
 		Frame frame = null;
 		Scanner input = new Scanner(System.in);
 		boolean terminate = false;
@@ -28,7 +37,6 @@ public class MobileNode {
 		}
 		homeAddr=args[0];
 		foreignAddr=args[1];
-		socket.setSoTimeout(1000);
 		
 		while (!terminate) {
 			int option;
@@ -51,6 +59,9 @@ public class MobileNode {
 							socket.receive(packet);
 						} catch (SocketTimeoutException e) {
 							continue;
+						} catch (IOException e) {
+							e.printStackTrace();
+							System.exit(0);
 						}
 						break;
 					}
@@ -60,7 +71,7 @@ public class MobileNode {
 						System.out.println(recvFrame.getMsg());
 						inputMsg=input.nextLine();
 						frame = new Frame(9,"","",inputMsg);
-						frame.send(socket,recvFrame.getAddrA(),Frame.FOREIGN_PORT);
+						frame.send(socket,recvFrame.getIpAddrA(),Frame.FOREIGN_PORT);
 					}
 					break;
 				}

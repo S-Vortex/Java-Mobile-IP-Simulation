@@ -21,7 +21,7 @@ public class ForeignAgent {
 	public static void main(String[] args) {
 		DatagramSocket socket=null;;
 		try {
-			socket = new DatagramSocket(Frame.FOREIGN_PORT);
+			socket = new DatagramSocket(FrameHandler.FOREIGN_PORT);
 		} catch (SocketException e) {
 			e.printStackTrace();
 			System.exit(0);
@@ -46,8 +46,8 @@ public class ForeignAgent {
 				e.printStackTrace();
 				System.exit(0);
 			}
-			recvFrame = new Frame(packet.getData());
-			switch (recvFrame.getType()) {
+			recvFrame =new Frame(packet.getData());
+			switch (FrameHandler.getType(recvFrame)) {
 				case 1: { //Register Mobile with Foreign
 					try {
 						localAddr = InetAddress.getLocalHost().toString();
@@ -55,11 +55,11 @@ public class ForeignAgent {
 						e.printStackTrace();
 						System.exit(0);
 					}
-					homeAddr = recvFrame.getIpAddrA();
+					homeAddr = FrameHandler.getIpAddrA(recvFrame);
 					mobileAddr = packet.getAddress().toString();
 					
-					sendFrame = new Frame(3,localAddr,homeAddr,"");
-					sendFrame.send(socket,homeAddr,Frame.HOME_PORT);
+					sendFrame = FrameHandler.create(3,localAddr,homeAddr,"");
+					FrameHandler.send(socket,homeAddr,FrameHandler.HOME_PORT,sendFrame);
 					break;
 				}
 				case 2: { //Deregister Mobile with Foreign
@@ -69,15 +69,15 @@ public class ForeignAgent {
 						e.printStackTrace();
 						System.exit(0);
 					}
-					sendFrame = new Frame(4,localAddr,homeAddr,"");
-					sendFrame.send(socket,homeAddr,Frame.HOME_PORT);
+					sendFrame = FrameHandler.create(4,localAddr,homeAddr,"");
+					FrameHandler.send(socket,homeAddr,FrameHandler.HOME_PORT,sendFrame);
 					homeAddr="";
 					mobileAddr = "";
 					break;
 				}
 				case 7: { //Send Message to Mobile
-					sendFrame = new Frame(8,recvFrame.getIpAddrA(),"",recvFrame.getMsg());
-					sendFrame.send(socket,mobileAddr,Frame.MOBILE_PORT);
+					sendFrame = FrameHandler.create(8,FrameHandler.getIpAddrA(recvFrame),"",FrameHandler.getMsg(recvFrame));
+					FrameHandler.send(socket,mobileAddr,FrameHandler.MOBILE_PORT,sendFrame);
 					break;
 				}
 			}

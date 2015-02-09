@@ -22,7 +22,7 @@ public class MobileNode {
 		String homeAddr, foreignAddr;
 		DatagramSocket socket = null;
 		try {
-			socket = new DatagramSocket(Frame.MOBILE_PORT);
+			socket = new DatagramSocket(FrameHandler.MOBILE_PORT);
 			socket.setSoTimeout(1000);
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -48,8 +48,8 @@ public class MobileNode {
 			option = input.nextInt();
 			switch (option) {
 				case 1: { // Register with Foreign Agent
-					frame = new Frame(1,homeAddr,homeAddr,"");
-					frame.send(socket, foreignAddr,Frame.FOREIGN_PORT);
+					frame = FrameHandler.create(1,homeAddr,homeAddr,"");
+					FrameHandler.send(socket, foreignAddr,FrameHandler.FOREIGN_PORT,frame);
 					
 					DatagramPacket packet = null;
 					Frame recvFrame;
@@ -66,18 +66,18 @@ public class MobileNode {
 						break;
 					}
 					recvFrame = new Frame(packet.getData());
-					if (recvFrame.getType()==8) {
+					if (FrameHandler.getType(recvFrame)==8) {
 						// Respond to message
-						System.out.println(recvFrame.getMsg());
+						System.out.println(FrameHandler.getMsg(recvFrame));
 						inputMsg=input.nextLine();
-						frame = new Frame(9,"","",inputMsg);
-						frame.send(socket,recvFrame.getIpAddrA(),Frame.FOREIGN_PORT);
+						frame = FrameHandler.create(9,"","",inputMsg);
+						FrameHandler.send(socket,FrameHandler.getIpAddrA(recvFrame),FrameHandler.FOREIGN_PORT,frame);
 					}
 					break;
 				}
 				case 2: { // Deregister with Foreign Agent
-					frame = new Frame(2,homeAddr,homeAddr,"");
-					frame.send(socket,foreignAddr,Frame.FOREIGN_PORT);
+					frame = FrameHandler.create(2,homeAddr,homeAddr,"");
+					FrameHandler.send(socket,foreignAddr,FrameHandler.FOREIGN_PORT,frame);
 					break;
 				}
 				case 3: { // Terminate Program

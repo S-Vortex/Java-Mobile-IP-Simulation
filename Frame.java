@@ -1,3 +1,18 @@
+///////////////////////////////////////////////////////////////////
+// Student name: Corey McCandless
+// Course: COSC 4653 - Advanced Networks
+// Assignment: #3 - Mobile IP Simulation
+// File name: Frame.java
+// Program's Purpose: Defines Frame class
+//
+// Program's Limitations:
+// Development Computer: Lenovo Y400 (Intel Core i7-3630QM)
+// Operating System: Windows 8.1
+// Integrated Development Environment (IDE): Notepad++
+// Compiler: Java 1.8.0_25
+// Program's Operational Status: Awaiting Testing
+///////////////////////////////////////////////////////////////////
+
 import java.io.*;
 import java.lang.*;
 import java.net.*;
@@ -5,6 +20,11 @@ import java.nio.*;
 import java.util.*;
 
 public class Frame {
+	public final int MOBILE_PORT = 9000;
+	public final int FOREIGN_PORT = 8000;
+	public final int HOME_PORT = 7000;
+	public final int CORRESPONDENT_PORT = 6000;
+	
 	public static final int MAX_MSG_SIZE = 52;
 	private byte[] data;
 	
@@ -90,6 +110,9 @@ public class Frame {
 	}
 	// Non-Static method for sending a frame via UDP
 	public void send(DatagramSocket socket, String toAddr, int port) {
+		if (toAddr=="") {
+			return;
+		}
 		DatagramPacket packet = null;
 		try {
 			new DatagramPacket(data,MAX_MSG_SIZE+12,InetAddress.getByName(toAddr),port);
@@ -104,6 +127,9 @@ public class Frame {
 	}
 	// Static method for sending data not yet organized into a frame via UDP
 	public static void send(DatagramSocket socket, String toAddr, int port, int type, String ipAddrA, String ipAddrB, String msg) {
+		if (toAddr=="") {
+			return;
+		}
 		Frame frame = new Frame(type, ipAddrA, ipAddrB, msg);
 		DatagramPacket packet = null;
 		try {

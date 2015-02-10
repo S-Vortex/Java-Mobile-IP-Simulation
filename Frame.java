@@ -20,5 +20,5 @@ public class Frame {
 	// Creates new Instance of Frame from a byte array. Truncates bytes that do not fit within the maximum frame size
 	public Frame(byte[] data) {
 		this.data = Arrays.copyOfRange(data,0,this.data.length);
-	}
-}
+	} // Frame(byte[])
+} // class

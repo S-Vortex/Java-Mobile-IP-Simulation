@@ -20,6 +20,9 @@ import java.util.*;
 public class MobileNode {
 	public static void main(String[] args) {
 		String homeAddr, foreignAddr;
+		Frame frame = null;
+		Scanner input = new Scanner(System.in);
+		boolean terminate = false;
 		DatagramSocket socket = null;
 		try {
 			socket = new DatagramSocket(FrameHandler.MOBILE_PORT);
@@ -27,14 +30,11 @@ public class MobileNode {
 		} catch (SocketException e) {
 			e.printStackTrace();
 			System.exit(0);
-		}
-		Frame frame = null;
-		Scanner input = new Scanner(System.in);
-		boolean terminate = false;
+		} // try
 		if (args.length < 2) {
 			System.out.println("Usage: java -jar MobileNode <home_agent_IP_address> <foreign_agent_IP_address>");
 			System.exit(0);
-		}
+		} // if
 		homeAddr=args[0];
 		foreignAddr=args[1];
 		
@@ -62,9 +62,9 @@ public class MobileNode {
 						} catch (IOException e) {
 							e.printStackTrace();
 							System.exit(0);
-						}
+						} // try
 						break;
-					}
+					} // while
 					recvFrame = new Frame(packet.getData());
 					if (FrameHandler.getType(recvFrame)==8) {
 						// Respond to message
@@ -72,18 +72,18 @@ public class MobileNode {
 						inputMsg=input.nextLine();
 						frame = FrameHandler.create(9,"","",inputMsg);
 						FrameHandler.send(socket,FrameHandler.getIpAddrA(recvFrame),FrameHandler.FOREIGN_PORT,frame);
-					}
+					} // if
 					break;
-				}
+				} // case
 				case 2: { // Deregister with Foreign Agent
 					frame = FrameHandler.create(2,homeAddr,homeAddr,"");
 					FrameHandler.send(socket,foreignAddr,FrameHandler.FOREIGN_PORT,frame);
 					break;
-				}
+				} // case
 				case 3: { // Terminate Program
 					terminate=true;
-				}	
-			}				
-		}
-	}
-}
+				} // case
+			} // switch
+		} // while
+	} // main(String[])
+} // class

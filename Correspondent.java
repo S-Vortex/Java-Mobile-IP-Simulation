@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// Student name: Sam Mills
+// Student name: Sam Mills, Corey McCandless
 // Course: COSC 4653 - Advanced Networks
 // Assignment: #3 - Mobile IP Simulation
 // File name: Correspondent.java
@@ -32,24 +32,32 @@ import java.util.*;
 
 
 public class Correspondent{
-	private final int port = 7000 //Listen port
+	private static final int port = FrameHandler.CORRESPONDENT_PORT; //Listen port
 	public static void main(String[] args){
+		// ===== Variables =====
+		String homeAgentIP = "";
+		boolean terminated = false;
+		DatagramSocket socket = null;
+		Scanner input = new Scanner(System.in);
+		String currIP = "";
+		try {
+			currIP = Inet4Address.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(0);
+		} // try
+		
 		//Startup
 		if (args.length < 1) {
-			System.out.println("Usage: java Correspondent.jar 
-				<home_agent_IP_address>");
+			System.out.println("Usage: java Correspondent.jar <home_agent_IP_address>");
 			System.exit(0);
 		} // if
+		
+		System.out.println("------------------------------------");
+		System.out.println("Current IP is: " + currIP);
 
-		System.out.println("---------------------------------------");
-		// ===== Variables =====
-		String homeAgentIP = args[0]; //Command line arg: home agent IP
-		String currIP = Inet4Address.getLocalHost().getHostAddress();
-			System.out.println("Current IP is: " + currIP);
-		Frame frame = null;
-		boolean terminated = false;
-		Scanner input = new Scanner(System.in);
-
+		homeAgentIP = args[0]; //Command line arg: home agent IP
+		
 		//===========================================================//
 		//==                        Socket                         ==//
 		//===========================================================//
@@ -57,7 +65,7 @@ public class Correspondent{
 		//try statement attempts to create a UDP socket on the port
 		try{
 			//Create the socket
-			DatagramSocket socket = new DatagramSocket(port);
+			socket = new DatagramSocket(port);
 			socket.setSoTimeout(1000); //set timeout to 1 second
 		} catch (SocketException e){
 			//If creation fails, display error info and quit
@@ -73,22 +81,48 @@ public class Correspondent{
 			int option;
 			cMenu();
 			option = input.nextInt();
+			input.nextLine();
 			switch (option) {
-
-			}
-
-
-
-
-
+				case 0: // Close
+				{
+					terminated=true;
+					FrameHandler.send(socket,homeAgentIP,FrameHandler.HOME_PORT,0,"","","");
+					break;
+				} // case 0
+				case 1: // Send message
+				{
+					Frame recvFrame = null;
+					Frame sendFrame = null;
+					String msg;
+					System.out.print("Type your message: ");
+					msg = input.nextLine();
+					sendFrame = FrameHandler.create(5,currIP,homeAgentIP,msg);
+					FrameHandler.send(socket,homeAgentIP,FrameHandler.HOME_PORT,sendFrame);
+					System.out.print("Message sent to " + homeAgentIP + "; Waiting for response");
+					recvFrame = FrameHandler.recv(socket,null,".");
+					switch (FrameHandler.getType(recvFrame)) {
+						case 6: //Mobile node not registered
+						{
+							System.out.println("\nMessage not sent: Mobile node not registered");
+							break;
+						} // case 6
+						default: 
+						{
+							System.out.println("\n"+FrameHandler.getMsg(recvFrame)+"\n");
+							break;
+						} // default
+					} // switch
+					break;
+				} // case 1
+			} // switch
+		} // while
 	} //main
 
+	// Prints menu options
 	public static void cMenu(){
 			System.out.println("------------------------------------");
 			System.out.println("Select an option from below:");
 			System.out.println("   0 - Close this program");
 			System.out.println("   1 - Send a message");
-
-			return 0;
-	}
+	} // cMenu()
 } //class

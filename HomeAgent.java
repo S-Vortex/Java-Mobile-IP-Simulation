@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////
-// Student name: Sam Mills
+// Student name: Sam Mills, Corey McCandless
 // Course: COSC 4653 - Advanced Networks
 // Assignment: #3 - Mobile IP Simulation
 // File name: HomeAgent.java
@@ -50,7 +50,7 @@ import java.util.*;
 
 
 public class HomeAgent{
-	private final int port = 7000
+	private static final int port = FrameHandler.HOME_PORT;
 	public static void main(String[] args)
 	{
 		//Welcome message
@@ -58,13 +58,21 @@ public class HomeAgent{
 		System.out.println("Home Agent is starting up...\n");
 
 		//Variables
-		String homeIP = Inet4Address.getLocalHost().getHostAddress();
-		regTable = new String [1][2];//for registration of nodes:
+		DatagramSocket socket = null;
+		String homeIP = "";
+		String[][] regTable = new String [1][2];//for registration of nodes:
 									 //[care of address][node address]
 		int nodeNum = 0; //Used for registration, keeps track of nodes
 						 //-is not used much in this program, only one
 						 // node will exist
 
+		try {
+			homeIP = Inet4Address.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(0);
+		} // try
+						 
 		//Display current IP
 		System.out.println("Current IP Address is: " + homeIP + "\n");
 		System.out.println("---------------------------------------");
@@ -76,8 +84,8 @@ public class HomeAgent{
 		//try statement attempts to create a UDP socket on the port
 		try{
 			//Listening Socket
-			DatagramSocket serverSocket = new DatagramSocket(port);
-			serverSocket.setSoTimeout(1000); //set timeout to 1 second
+			socket = new DatagramSocket(port);
+			socket.setSoTimeout(1000); //set timeout to 1 second
 		} catch (SocketException e){
 			//If creation fails, display error info and quit
 			e.printStackTrace();
@@ -89,21 +97,10 @@ public class HomeAgent{
 		//-----------------------------//
 		System.out.println("\nListening...\n");
 		while (true){
-			DatagramPacket packet = null; //Active packet
 			Frame recvFrame, sendFrame; //Active frames
 
-			//Try to recieve a packet from the network
-			try {
-				socket.receive(packet);
-			} catch (SocketTimeoutException e) {
-				continue; //loop again if timeout
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(0);
-			}
-
-			//Get a frame using the Frame and Framehandler classes
-			recvFrame =new Frame(packet.getData());
+			// Receive packet from network and unpack frame
+			recvFrame = FrameHandler.recv(socket,null);
 
 			//----------------------------------------//
 			//--     Handle every kind of frame     --//
@@ -113,8 +110,7 @@ public class HomeAgent{
 			switch (FrameHandler.getType(recvFrame)) {
 				case 0: { //Type 0 (Correspondent -> Home Agent)
 					      //"Shut Down"
-					System.out.println("The current Correspondent is 
-						shutting down.")]
+					System.out.println("The current Correspondent is shutting down.");
 					break;
 				} //case
 				case 3: { //Type 3 (Foreign Agent -> Home Agent)
@@ -122,26 +118,20 @@ public class HomeAgent{
 					//receive a registration from the foreign agent:
 					//   -put frames address A into regTable "COA"
 					//   -put frames address B into regTable "node IP"
-					regTable[nodeNum][0] = FrameHandler.getIpAddrA(
-						recvFrame);
-					regTable[nodeNum][1] = FrameHandler.getIpAddrB(
-						recvFrame);
-					nodeNum +=1; //increases node count for next reg
-					System.out.println("Mobile node registered with 
-						Home Agent!\nCare Of Address: " + 
-						regTable[0][0] + "\nIP Address: "+
-						regTable[0][1] + "\n");
+					regTable[nodeNum][0] = FrameHandler.getIpAddrA(recvFrame);
+					regTable[nodeNum][1] = FrameHandler.getIpAddrB(recvFrame);
+					//nodeNum +=1; //increases node count for next reg //breaks program; find another way to handle this
+					System.out.println("Mobile node registered with Home Agent!\nCare Of Address: " + regTable[nodeNum][0] + "\nIP Address: "+regTable[nodeNum][1] + "\n");
 					break;
 				} //case
 				case 4: { //Type 4 (Foreign Agent -> Home Agent)
 						  //"Deregister"
 					//receive a deregistration from the foreign agent:
 					//   -clears node from reg table
-					nodeNum -=1; //decreases node count for next reg
-					break;
 					regTable[nodeNum][0] = null;
 					regTable[nodeNum][1] = null;
-					System.out.println("Mobile node deregistered.\n")
+					System.out.println("Mobile node deregistered.\n");
+					break;
 				} //case
 				case 5: { //Type 5 (Correspondent -> Home Agent)
 						  //"Send Message" Forward message from Cor...
@@ -149,30 +139,20 @@ public class HomeAgent{
 					//address to send to.
 					//  -If so, forward the message
 					//  -If not, inform Correspondent of the mistake
-					System.out.println("Message received from 
-						Correspondent.")
-					if(regTable[nodeNum-1][1].equals(
-						FrameHandler.getIpAddrA(recvFrame))){
-							sendFrame = FrameHandler.create(7,
-								FrameHandler.getIpAddrA(recvFrame),"",
-								FrameHandler.getMsg(recvFrame));
-							FrameHandler.send(socket,regTable[0][1],
-								FrameHandler.MOBILE_PORT,sendFrame);
-							System.out.println("Sent the following
-								message to the Mobile Node: "+ 
-								FrameHandler.getMsg(recvFrame));
+					System.out.println("Message received from Correspondent.");
+					if(regTable[nodeNum][1]!=null&&regTable[nodeNum][1].equals(FrameHandler.getIpAddrA(recvFrame))){
+							sendFrame = FrameHandler.create(7,FrameHandler.getIpAddrA(recvFrame),"",FrameHandler.getMsg(recvFrame));
+							FrameHandler.send(socket,regTable[nodeNum][0],FrameHandler.FOREIGN_PORT,sendFrame);
+							//System.out.println("Sent the following message to the Mobile Node: "+ FrameHandler.getMsg(recvFrame));
+							System.out.println("MSG SENT TO MOBILE NODE at " + regTable[nodeNum][1]);
 							break;
 					} else{
-						sendFrame = FrameHandler.create(6,
-							"",homeIP,"");
-						FrameHandler.send(socket,
-							FrameHandler.getIpAddrA(recvFrame),
-							FrameHandler.MOBILE_PORT,sendFrame);
-						System.out.println("Address of mobile node 
-							requested by Correspondent not found. 
-							Sending this error to the Correspondent.");
+						String correspondentAddr = FrameHandler.getIpAddrA(recvFrame);
+						sendFrame = FrameHandler.create(6,"",homeIP,"");
+						FrameHandler.send(socket,correspondentAddr,FrameHandler.CORRESPONDENT_PORT,sendFrame);
+						System.out.println("Address of mobile node requested by Correspondent not found. Sending this error to the Correspondent at " + correspondentAddr);
 						break;
-					}
+					} // if
 				} //case
 			} //switch
 		} //while

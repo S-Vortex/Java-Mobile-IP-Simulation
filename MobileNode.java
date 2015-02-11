@@ -22,7 +22,7 @@ public class MobileNode {
 		String homeAddr, foreignAddr;
 		Frame frame = null;
 		Scanner input = new Scanner(System.in);
-		boolean terminate = false;
+		boolean terminate = false,registered=false;
 		DatagramSocket socket = null;
 		try {
 			socket = new DatagramSocket(FrameHandler.MOBILE_PORT);
@@ -40,48 +40,50 @@ public class MobileNode {
 		
 		while (!terminate) {
 			int option;
-			System.out.println("----------------------------------------");
+			System.out.println("---------------------------------------");
+			try {
+				System.out.println("Current IP is: " + Inet4Address.getLocalHost().getHostAddress());
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			} // try
+			System.out.println("STATUS: " + (registered?"REGISTERED":"NOT REGISTERED"));
+			System.out.println("---------------------------------------");
 			System.out.println("Select one option from below:");
 			System.out.println("   1 - Register with Home Agent");
 			System.out.println("   2 - Deregister with Foreign Agent");
 			System.out.println("   3 - Terminate program");
 			option = input.nextInt();
+			input.nextLine();
 			switch (option) {
 				case 1: { // Register with Foreign Agent
+					String inputMsg;
+					Frame recvFrame;
 					frame = FrameHandler.create(1,homeAddr,homeAddr,"");
 					FrameHandler.send(socket, foreignAddr,FrameHandler.FOREIGN_PORT,frame);
-					
-					DatagramPacket packet = null;
-					Frame recvFrame;
-					String inputMsg = "";
-					while (true) { // Listen for messages
-						try {
-							socket.receive(packet);
-						} catch (SocketTimeoutException e) {
-							continue;
-						} catch (IOException e) {
-							e.printStackTrace();
-							System.exit(0);
-						} // try
-						break;
-					} // while
-					recvFrame = new Frame(packet.getData());
+					inputMsg = "";
+					recvFrame = FrameHandler.recv(socket,null,".");
+					registered=true;
 					if (FrameHandler.getType(recvFrame)==8) {
 						// Respond to message
-						System.out.println(FrameHandler.getMsg(recvFrame));
+						System.out.println("\n"+FrameHandler.getMsg(recvFrame)+"\n");
+						System.out.print("Type your response: ");
 						inputMsg=input.nextLine();
 						frame = FrameHandler.create(9,"","",inputMsg);
-						FrameHandler.send(socket,FrameHandler.getIpAddrA(recvFrame),FrameHandler.FOREIGN_PORT,frame);
+						FrameHandler.send(socket,FrameHandler.getIpAddrA(recvFrame),FrameHandler.CORRESPONDENT_PORT,frame);
+						System.out.println("");
 					} // if
 					break;
 				} // case
 				case 2: { // Deregister with Foreign Agent
 					frame = FrameHandler.create(2,homeAddr,homeAddr,"");
 					FrameHandler.send(socket,foreignAddr,FrameHandler.FOREIGN_PORT,frame);
+					registered=false;
 					break;
 				} // case
 				case 3: { // Terminate Program
 					terminate=true;
+					FrameHandler.send(socket,foreignAddr,FrameHandler.FOREIGN_PORT,0,"","","");
 				} // case
 			} // switch
 		} // while

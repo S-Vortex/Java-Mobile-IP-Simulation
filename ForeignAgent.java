@@ -20,13 +20,25 @@ public class ForeignAgent {
 	private final int port = 8000;
 	public static void main(String[] args) {
 		DatagramSocket socket=null;;
+		String homeAddr="",mobileAddr="",localAddr="";
+		//Welcome message
+		System.out.println("---------------------------------------");
+		System.out.println("Home Agent is starting up...\n");
+		//Display current IP
+		try {
+			localAddr=Inet4Address.getLocalHost().getHostAddress();
+			System.out.println("Current IP Address is: " + localAddr + "\n");
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		} // try
+		System.out.println("---------------------------------------");
 		try {
 			socket = new DatagramSocket(FrameHandler.FOREIGN_PORT);
 		} catch (SocketException e) {
 			e.printStackTrace();
 			System.exit(0);
 		} // try
-		String homeAddr="",mobileAddr="";
 		try {
 			socket.setSoTimeout(1000);
 		} catch(SocketException e) {
@@ -35,49 +47,34 @@ public class ForeignAgent {
 		} // try
 		System.out.println("Listening...");
 		while (true) {
-			String localAddr = "";
-			DatagramPacket packet = null;
+			DatagramPacket packet = new DatagramPacket(new byte[64],64);
 			Frame recvFrame, sendFrame;
-			try {
-				socket.receive(packet);
-			} catch (SocketTimeoutException e) {
-				continue;
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(0);
-			} // try
-			recvFrame =new Frame(packet.getData());
+			recvFrame = FrameHandler.recv(socket,packet);
 			switch (FrameHandler.getType(recvFrame)) {
+				case 0: { //Mobile Node is shutting down
+					System.out.println("SHUTDOWN: mobile node is shutting down");
+					break;
+				}
 				case 1: { //Register Mobile with Foreign
-					try {
-						localAddr = InetAddress.getLocalHost().toString();
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-						System.exit(0);
-					} // try
 					homeAddr = FrameHandler.getIpAddrA(recvFrame);
-					mobileAddr = packet.getAddress().toString();
+					mobileAddr = packet.getAddress().toString().replace("/","");
 					
 					sendFrame = FrameHandler.create(3,localAddr,homeAddr,"");
 					FrameHandler.send(socket,homeAddr,FrameHandler.HOME_PORT,sendFrame);
+					System.out.println("REGISTER: " + mobileAddr);
 					break;
 				} // case
 				case 2: { //Deregister Mobile with Foreign
-					try {
-						localAddr = InetAddress.getLocalHost().toString();
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-						System.exit(0);
-					} // try
 					sendFrame = FrameHandler.create(4,localAddr,homeAddr,"");
 					FrameHandler.send(socket,homeAddr,FrameHandler.HOME_PORT,sendFrame);
-					homeAddr="";
+					System.out.println("DEREGISTER: " + mobileAddr);
 					mobileAddr = "";
 					break;
 				} // case
 				case 7: { //Send Message to Mobile
 					sendFrame = FrameHandler.create(8,FrameHandler.getIpAddrA(recvFrame),"",FrameHandler.getMsg(recvFrame));
 					FrameHandler.send(socket,mobileAddr,FrameHandler.MOBILE_PORT,sendFrame);
+					System.out.println("MSG: Sent to mobile node at " + mobileAddr);
 					break;
 				} // case
 			} // switch

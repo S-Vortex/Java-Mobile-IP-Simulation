@@ -13,6 +13,11 @@
 //         through the Foreign Agent
 //
 // Program's Limitations:
+//    -Only supports one mobile node (easy fix, already keeping
+//        track of the number of nodes, just needs an implementation
+//        of a search that searches the regTable for the desired
+//        node)
+//    -No interaction currently (no args or user input)
 // Program details:
 //    Frame types:
 //     -Receive types{
@@ -49,6 +54,7 @@ public class HomeAgent{
 	public static void main(String[] args)
 	{
 		//Welcome message
+		System.out.println("---------------------------------------");
 		System.out.println("Home Agent is starting up...\n");
 
 		//Variables
@@ -56,11 +62,12 @@ public class HomeAgent{
 		regTable = new String [1][2];//for registration of nodes:
 									 //[care of address][node address]
 		int nodeNum = 0; //Used for registration, keeps track of nodes
-						 //  -is not used much in this program, only one
-						 //   node will exist
+						 //-is not used much in this program, only one
+						 // node will exist
 
 		//Display current IP
 		System.out.println("Current IP Address is: " + homeIP + "\n");
+		System.out.println("---------------------------------------");
 
 		//===========================================================//
 		//==                   Listening Socket                    ==//
@@ -80,7 +87,7 @@ public class HomeAgent{
 		//-----------------------------//
 		//--     Start Listening     --//
 		//-----------------------------//
-		System.out.println("Listening...\n");
+		System.out.println("\nListening...\n");
 		while (true){
 			DatagramPacket packet = null; //Active packet
 			Frame recvFrame, sendFrame; //Active frames
@@ -113,13 +120,17 @@ public class HomeAgent{
 				case 3: { //Type 3 (Foreign Agent -> Home Agent)
 						  //"Register"
 					//receive a registration from the foreign agent:
-					//   -put frames address A into regTable "node COA"
+					//   -put frames address A into regTable "COA"
 					//   -put frames address B into regTable "node IP"
 					regTable[nodeNum][0] = FrameHandler.getIpAddrA(
 						recvFrame);
 					regTable[nodeNum][1] = FrameHandler.getIpAddrB(
 						recvFrame);
 					nodeNum +=1; //increases node count for next reg
+					System.out.println("Mobile node registered with 
+						Home Agent!\nCare Of Address: " + 
+						regTable[0][0] + "\nIP Address: "+
+						regTable[0][1] + "\n");
 					break;
 				} //case
 				case 4: { //Type 4 (Foreign Agent -> Home Agent)
@@ -130,6 +141,7 @@ public class HomeAgent{
 					break;
 					regTable[nodeNum][0] = null;
 					regTable[nodeNum][1] = null;
+					System.out.println("Mobile node deregistered.\n")
 				} //case
 				case 5: { //Type 5 (Correspondent -> Home Agent)
 						  //"Send Message" Forward message from Cor...
@@ -137,13 +149,18 @@ public class HomeAgent{
 					//address to send to.
 					//  -If so, forward the message
 					//  -If not, inform Correspondent of the mistake
+					System.out.println("Message received from 
+						Correspondent.")
 					if(regTable[nodeNum-1][1].equals(
-						FrameHandler.getIpAddrA(recvFrame))){ 
+						FrameHandler.getIpAddrA(recvFrame))){
 							sendFrame = FrameHandler.create(7,
 								FrameHandler.getIpAddrA(recvFrame),"",
 								FrameHandler.getMsg(recvFrame));
 							FrameHandler.send(socket,regTable[0][1],
 								FrameHandler.MOBILE_PORT,sendFrame);
+							System.out.println("Sent the following
+								message to the Mobile Node: "+ 
+								FrameHandler.getMsg(recvFrame));
 							break;
 					} else{
 						sendFrame = FrameHandler.create(6,
@@ -151,6 +168,9 @@ public class HomeAgent{
 						FrameHandler.send(socket,
 							FrameHandler.getIpAddrA(recvFrame),
 							FrameHandler.MOBILE_PORT,sendFrame);
+						System.out.println("Address of mobile node 
+							requested by Correspondent not found. 
+							Sending this error to the Correspondent.");
 						break;
 					}
 				} //case

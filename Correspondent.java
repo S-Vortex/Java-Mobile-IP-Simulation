@@ -24,14 +24,71 @@
 // Compiler: Java 1.8.0_25
 // Program's Operational Status: Incomplete
 ///////////////////////////////////////////////////////////////////////
+import java.io.*;
+import java.lang.*;
+import java.net.*;
+import java.nio.*;
+import java.util.*;
+
 
 public class Correspondent{
 	private final int port = 7000 //Listen port
 	public static void main(String[] args){
+		//Startup
+		if (args.length < 1) {
+			System.out.println("Usage: java Correspondent.jar 
+				<home_agent_IP_address>");
+			System.exit(0);
+		} // if
 
+		System.out.println("---------------------------------------");
 		// ===== Variables =====
 		String homeAgentIP = args[0]; //Command line arg: home agent IP
+		String currIP = Inet4Address.getLocalHost().getHostAddress();
+			System.out.println("Current IP is: " + currIP);
+		Frame frame = null;
+		boolean terminated = false;
+		Scanner input = new Scanner(System.in);
+
+		//===========================================================//
+		//==                        Socket                         ==//
+		//===========================================================//
+
+		//try statement attempts to create a UDP socket on the port
+		try{
+			//Create the socket
+			DatagramSocket socket = new DatagramSocket(port);
+			socket.setSoTimeout(1000); //set timeout to 1 second
+		} catch (SocketException e){
+			//If creation fails, display error info and quit
+			e.printStackTrace();
+			System.exit(0);
+		} //try
+
+
+		//------------------//
+		//--     Start    --//
+		//------------------//
+		while (!terminated) {
+			int option;
+			cMenu();
+			option = input.nextInt();
+			switch (option) {
+
+			}
+
+
+
 
 
 	} //main
+
+	public static void cMenu(){
+			System.out.println("------------------------------------");
+			System.out.println("Select an option from below:");
+			System.out.println("   0 - Close this program");
+			System.out.println("   1 - Send a message");
+
+			return 0;
+	}
 } //class

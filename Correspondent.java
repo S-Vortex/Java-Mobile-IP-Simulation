@@ -40,21 +40,12 @@ public class Correspondent{
 		DatagramSocket socket = null;
 		Scanner input = new Scanner(System.in);
 		String currIP = "";
-		try {
-			currIP = Inet4Address.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.exit(0);
-		} // try
 		
 		//Startup
 		if (args.length < 1) {
 			System.out.println("Usage: java Correspondent.jar <home_agent_IP_address>");
 			System.exit(0);
 		} // if
-		
-		System.out.println("------------------------------------");
-		System.out.println("Current IP is: " + currIP);
 
 		homeAgentIP = args[0]; //Command line arg: home agent IP
 		
@@ -72,6 +63,16 @@ public class Correspondent{
 			e.printStackTrace();
 			System.exit(0);
 		} //try
+		
+		try {
+			currIP = Inet4Address.getLocalHost().getHostAddress();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		} // try
+		
+		System.out.println("------------------------------------");
+		//System.out.println("Current IP is: " + currIP);
 
 
 		//------------------//
@@ -96,7 +97,7 @@ public class Correspondent{
 					String msg;
 					System.out.print("Type your message: ");
 					msg = input.nextLine();
-					sendFrame = FrameHandler.create(5,currIP,homeAgentIP,msg);
+					sendFrame = FrameHandler.create(5,homeAgentIP,homeAgentIP,msg);
 					FrameHandler.send(socket,homeAgentIP,FrameHandler.HOME_PORT,sendFrame);
 					System.out.print("Message sent to " + homeAgentIP + "; Waiting for response");
 					recvFrame = FrameHandler.recv(socket,null,".");

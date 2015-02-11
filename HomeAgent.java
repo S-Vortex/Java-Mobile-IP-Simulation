@@ -66,17 +66,6 @@ public class HomeAgent{
 						 //-is not used much in this program, only one
 						 // node will exist
 
-		try {
-			homeIP = Inet4Address.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.exit(0);
-		} // try
-						 
-		//Display current IP
-		System.out.println("Current IP Address is: " + homeIP + "\n");
-		System.out.println("---------------------------------------");
-
 		//===========================================================//
 		//==                   Listening Socket                    ==//
 		//===========================================================//
@@ -92,15 +81,26 @@ public class HomeAgent{
 			System.exit(0);
 		} //try
 
+		try {
+			// homeIP = Inet4Address.getLocalHost().getHostAddress();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		} // try
+						 
+		//Display current IP
+		//System.out.println("Current IP Address is: " + homeIP + "\n");
+		System.out.println("---------------------------------------");
+
 		//-----------------------------//
 		//--     Start Listening     --//
 		//-----------------------------//
 		System.out.println("\nListening...\n");
 		while (true){
 			Frame recvFrame, sendFrame; //Active frames
-
+			DatagramPacket packet = new DatagramPacket(new byte[64],64);
 			// Receive packet from network and unpack frame
-			recvFrame = FrameHandler.recv(socket,null);
+			recvFrame = FrameHandler.recv(socket,packet);
 
 			//----------------------------------------//
 			//--     Handle every kind of frame     --//
@@ -120,7 +120,6 @@ public class HomeAgent{
 					//   -put frames address B into regTable "node IP"
 					regTable[nodeNum][0] = FrameHandler.getIpAddrA(recvFrame);
 					regTable[nodeNum][1] = FrameHandler.getIpAddrB(recvFrame);
-					//nodeNum +=1; //increases node count for next reg //breaks program; find another way to handle this
 					System.out.println("Mobile node registered with Home Agent!\nCare Of Address: " + regTable[nodeNum][0] + "\nIP Address: "+regTable[nodeNum][1] + "\n");
 					break;
 				} //case
@@ -140,14 +139,14 @@ public class HomeAgent{
 					//  -If so, forward the message
 					//  -If not, inform Correspondent of the mistake
 					System.out.println("Message received from Correspondent.");
+					homeIP=FrameHandler.getIpAddrA(recvFrame);
 					if(regTable[nodeNum][1]!=null&&regTable[nodeNum][1].equals(FrameHandler.getIpAddrA(recvFrame))){
-							sendFrame = FrameHandler.create(7,FrameHandler.getIpAddrA(recvFrame),"",FrameHandler.getMsg(recvFrame));
+							sendFrame = FrameHandler.create(7,packet.getAddress().getHostAddress(),homeIP,FrameHandler.getMsg(recvFrame));
 							FrameHandler.send(socket,regTable[nodeNum][0],FrameHandler.FOREIGN_PORT,sendFrame);
-							//System.out.println("Sent the following message to the Mobile Node: "+ FrameHandler.getMsg(recvFrame));
 							System.out.println("MSG SENT TO MOBILE NODE at " + regTable[nodeNum][1]);
 							break;
 					} else{
-						String correspondentAddr = FrameHandler.getIpAddrA(recvFrame);
+						String correspondentAddr = packet.getAddress().getHostAddress();
 						sendFrame = FrameHandler.create(6,"",homeIP,"");
 						FrameHandler.send(socket,correspondentAddr,FrameHandler.CORRESPONDENT_PORT,sendFrame);
 						System.out.println("Address of mobile node requested by Correspondent not found. Sending this error to the Correspondent at " + correspondentAddr);

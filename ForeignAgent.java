@@ -24,15 +24,6 @@ public class ForeignAgent {
 		//Welcome message
 		System.out.println("---------------------------------------");
 		System.out.println("Foreign Agent is starting up...\n");
-		//Display current IP
-		try {
-			localAddr=Inet4Address.getLocalHost().getHostAddress();
-			System.out.println("Current IP Address is: " + localAddr + "\n");
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(0);
-		} // try
-		System.out.println("---------------------------------------");
 		try {
 			socket = new DatagramSocket(FrameHandler.FOREIGN_PORT);
 		} catch (SocketException e) {
@@ -45,6 +36,15 @@ public class ForeignAgent {
 			e.printStackTrace();
 			System.exit(0);
 		} // try
+		//Display current IP
+		try {
+			// localAddr=Inet4Address.getLocalHost().getHostAddress();
+			//System.out.println("Current IP Address is: " + localAddr + "\n");
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		} // try
+		System.out.println("---------------------------------------");
 		System.out.println("Listening...");
 		while (true) {
 			DatagramPacket packet = new DatagramPacket(new byte[64],64);
@@ -56,7 +56,8 @@ public class ForeignAgent {
 					break;
 				}
 				case 1: { //Register Mobile with Foreign
-					homeAddr = FrameHandler.getIpAddrA(recvFrame);
+					localAddr=FrameHandler.getIpAddrA(recvFrame);
+					homeAddr = FrameHandler.getIpAddrB(recvFrame);
 					mobileAddr = packet.getAddress().toString().replace("/","");
 					
 					sendFrame = FrameHandler.create(3,localAddr,homeAddr,"");

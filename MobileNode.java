@@ -42,7 +42,7 @@ public class MobileNode {
 			int option;
 			System.out.println("---------------------------------------");
 			try {
-				System.out.println("Current IP is: " + Inet4Address.getLocalHost().getHostAddress());
+				//System.out.println("Current IP is: " + Inet4Address.getLocalHost().getHostAddress());
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(0);
@@ -59,7 +59,7 @@ public class MobileNode {
 				case 1: { // Register with Foreign Agent
 					String inputMsg;
 					Frame recvFrame;
-					frame = FrameHandler.create(1,homeAddr,homeAddr,"");
+					frame = FrameHandler.create(1,foreignAddr,homeAddr,"");
 					FrameHandler.send(socket, foreignAddr,FrameHandler.FOREIGN_PORT,frame);
 					inputMsg = "";
 					recvFrame = FrameHandler.recv(socket,null,".");

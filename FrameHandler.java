@@ -153,11 +153,13 @@ public abstract class FrameHandler {
 	public static void send(DatagramSocket socket, String toAddr, int port, int type, String ipAddrA, String ipAddrB, String msg) {
 		send(socket,toAddr,port,create(type,ipAddrA,ipAddrB,msg));
 	} // send(DatagramSocket,String,int,int,String,String,String)
+	
 	// Static method for receiving UDP datagram. Returns an instance of Frame
 	public static Frame recv(DatagramSocket socket,DatagramPacket packet) {
 		return recv(socket,packet,"");
 	} // recv(DatagramSocket,DatagramPacket)
 	// Static method for receiving UDP datagram with optional "waiting" characters
+	
 	public static Frame recv(DatagramSocket socket,DatagramPacket packet, String waitChars) {
 		boolean timeout=false;
 		Frame result = null;
@@ -195,6 +197,7 @@ public abstract class FrameHandler {
 		debugPrint(String.format("MSG_RECVD: %s:%d\n   %d %s %s",packet.getAddress(),packet.getPort(),getType(result),getIpAddrA(result),getIpAddrB(result)));
 		return result;
 	} // recv(DatagramSocket)
+	
 	private static void debugPrint(String msg) {
 		if (DEBUG) System.out.println(msg);
 	} // debugPrint(String)

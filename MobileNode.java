@@ -10,7 +10,7 @@
 // Operating System: Windows 8.1
 // Integrated Development Environment (IDE): Notepad++
 // Compiler: Java 1.8.0_25
-// Program's Operational Status: Awaiting Testing
+// Program's Operational Status: Operational
 ///////////////////////////////////////////////////////////////////
 
 import java.io.*;

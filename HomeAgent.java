@@ -39,7 +39,7 @@
 // Operating System: Windows 8.1
 // Integrated Development Environment (IDE): Sublime Text 3
 // Compiler: Java 1.8.0_25
-// Program's Operational Status: Incomplete
+// Program's Operational Status: Operational
 ///////////////////////////////////////////////////////////////////
 
 import java.io.*;
